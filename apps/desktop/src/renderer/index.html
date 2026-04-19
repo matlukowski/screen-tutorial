@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local AI Screen Assistant</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <div class="hero-meta">
+            <span id="windowTitle">Brak aktywnego kontekstu</span>
+          </div>
+        </div>
+        <div class="window-actions">
+          <button id="pinBtn" title="Przypnij/odepnij nad innymi">📌</button>
+          <button id="modeBtn" title="Przełącz między pełnym ekranem a oknem">Okno</button>
+          <button id="minBtn" title="Minimalizuj">—</button>
+          <button id="closeBtn" title="Ukryj">✕</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <section class="panel controls-panel">
+          <div class="section-heading">
+            <div>
+              <h2>Pytanie do agenta</h2>
+              <p class="subtle">Aplikacja zbiera kontekst automatycznie, ale do Codexa trafia on dopiero po kliknięciu przycisku poniżej.</p>
+              <p id="captureMeta" class="subtle"></p>
+            </div>
+          </div>
+
+          <label for="question">Pytanie</label>
+          <textarea id="question" rows="5" placeholder="Np. jak dodać nowy kontakt albo gdzie kliknąć, żeby zmienić status?"></textarea>
+
+          <div class="row">
+            <button id="recordBtn" title="Przytrzymaj, aby nagrywać">🎙️ Push-to-talk</button>
+            <button id="askBtn">Zapytaj agenta</button>
+          </div>
+
+          <div id="status" class="status"></div>
+        </section>
+
+        <section class="panel answer-panel">
+          <div class="section-heading">
+            <div>
+              <h2>Odpowiedź</h2>
+              <p class="subtle">Agent opisuje kolejne kroki możliwie konkretnie i operacyjnie.</p>
+            </div>
+          </div>
+          <pre id="answer"></pre>
+        </section>
+
+        <section class="panel history-panel">
+          <div class="section-heading">
+            <div>
+              <h2>Historia</h2>
+              <p class="subtle">Kliknij wcześniejszą sesję, aby wrócić do ostatniego pytania i odpowiedzi.</p>
+            </div>
+          </div>
+          <ul id="history"></ul>
+        </section>
+      </div>
+    </main>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>
