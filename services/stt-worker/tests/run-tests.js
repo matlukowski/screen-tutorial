@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
@@ -87,6 +88,29 @@ run("writes temporary audio files with the correct extension", async () => {
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
   }
+});
+
+run("discovers NVIDIA runtime DLL directories from Python site-packages on Windows", () => {
+  if (process.platform !== "win32") {
+    return;
+  }
+
+  const pythonSnippet = [
+    "import importlib.util, json, pathlib",
+    `script_path = pathlib.Path(r"${path.resolve(__dirname, "../scripts/transcribe.py")}")`,
+    "spec = importlib.util.spec_from_file_location('transcribe_module', script_path)",
+    "module = importlib.util.module_from_spec(spec)",
+    "spec.loader.exec_module(module)",
+    "print(json.dumps(module.discover_windows_cuda_bin_dirs()))",
+  ].join("; ");
+
+  const output = execFileSync("python", ["-c", pythonSnippet], {
+    encoding: "utf8",
+  });
+  const result = JSON.parse(output.trim());
+
+  assert(result.pythonCandidates.some((entry) => entry.toLowerCase().includes(`${path.sep}nvidia${path.sep}cublas${path.sep}bin`.toLowerCase())));
+  assert(result.pythonCandidates.some((entry) => entry.toLowerCase().includes(`${path.sep}nvidia${path.sep}cudnn${path.sep}bin`.toLowerCase())));
 });
 
 process.on("beforeExit", () => {

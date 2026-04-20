@@ -19,6 +19,44 @@ let captureInFlight = false;
 let prefersFullscreen = true;
 let screenshotBuffer: string[] = [];
 
+async function loadEnvironmentFile() {
+  const repoRoot = path.resolve(__dirname, "../../..");
+  const envPath = path.join(repoRoot, ".env");
+
+  try {
+    const raw = await fs.readFile(envPath, "utf8");
+
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+
+      const equalsIndex = trimmed.indexOf("=");
+      if (equalsIndex === -1) {
+        continue;
+      }
+
+      const key = trimmed.slice(0, equalsIndex).trim();
+      let value = trimmed.slice(equalsIndex + 1).trim();
+
+      if (!key || process.env[key] !== undefined) {
+        continue;
+      }
+
+      if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+
+      process.env[key] = value;
+    }
+  } catch (error: any) {
+    if (error?.code !== "ENOENT") {
+      console.warn("Failed to load .env file", { envPath, error: error?.message });
+    }
+  }
+}
+
 async function getActiveWindowTitle(): Promise<string> {
   try {
     const activeWinModule = await import("active-win");
@@ -259,7 +297,10 @@ function registerIpc() {
     const result = await sttWorker.transcribeFromBuffer(payload);
 
     if (result.status === "ok") {
+      const strategy = result.diagnostics?.worker?.strategy as { computeType?: string; device?: string } | undefined;
       console.info("Local STT transcription succeeded", {
+        activeDevice: strategy?.device,
+        computeType: strategy?.computeType,
         durationMs: payload.durationMs,
         mimeType: payload.mimeType,
         status: result.status,
@@ -306,6 +347,8 @@ function registerIpc() {
 }
 
 async function bootstrap() {
+  await loadEnvironmentFile();
+
   const userDataPath = app.getPath("userData");
   screenshotDir = path.join(userDataPath, "screenshots");
   await fs.mkdir(screenshotDir, { recursive: true });

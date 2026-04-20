@@ -38,10 +38,10 @@ function setVoiceMode(mode) {
 
 function setWindowMode(isFullscreen) {
   state.isFullscreen = isFullscreen;
-  els.modeBtn.textContent = isFullscreen ? "Okno" : "PeĹ‚ny";
+  els.modeBtn.textContent = isFullscreen ? "Okno" : "Pelny";
   els.modeBtn.title = isFullscreen
-    ? "PrzeĹ‚Ä…cz do trybu okna, aby mĂłc przesuwaÄ‡ aplikacjÄ™"
-    : "PrzeĹ‚Ä…cz z powrotem do peĹ‚nego ekranu";
+    ? "Przelacz do trybu okna, aby moc przesuwac aplikacje"
+    : "Przelacz z powrotem do pelnego ekranu";
 }
 
 function setContext(payload) {
@@ -64,7 +64,7 @@ async function loadHistory() {
 
   for (const session of sessions) {
     const li = document.createElement("li");
-    li.textContent = `${session.appTitle} â€” ${new Date(session.lastInteractionAt).toLocaleString()}`;
+    li.textContent = `${session.appTitle} - ${new Date(session.lastInteractionAt).toLocaleString()}`;
     li.onclick = async () => {
       const detail = await window.assistantAPI.getSession(session.id);
       if (!detail || !detail.interactions?.length) return;
@@ -88,7 +88,7 @@ async function askAgent() {
     return;
   }
 
-  setStatus(`WysyĹ‚anie pytania razem z buforem ${state.screenshotPaths.length} screenshotĂłw...`);
+  setStatus(`Wysylanie pytania razem z buforem ${state.screenshotPaths.length} screenshotow...`);
 
   const result = await window.assistantAPI.ask({
     question,
@@ -101,7 +101,7 @@ async function askAgent() {
 
   state.sessionId = result.sessionId;
   els.answer.textContent = result.answer;
-  setStatus(`OdpowiedĹş odebrana (${new Date(result.createdAt).toLocaleTimeString()})`);
+  setStatus(`Odpowiedz odebrana (${new Date(result.createdAt).toLocaleTimeString()})`);
   await loadHistory();
 }
 
@@ -136,13 +136,15 @@ function getRecorderOptions() {
 function getTranscriptionErrorMessage(result) {
   switch (result?.errorCode) {
     case "dependency_missing":
-      return "Lokalny worker STT nie jest gotowy. SprawdĹş instalacjÄ™ faster-whisper i Pythona.";
+      return "Lokalny worker STT nie jest gotowy. Sprawdz instalacje faster-whisper i Pythona.";
+    case "gpu_runtime_missing":
+      return "GPU zostalo wybrane do STT, ale aplikacja nie widzi bibliotek CUDA/cuDNN. Sprawdz konfiguracje GPU.";
     case "model_initialization_failed":
-      return "Worker STT nie uruchomiĹ‚ modelu. SprawdĹş konfiguracjÄ™ CPU/GPU.";
+      return "Worker STT nie uruchomil modelu. Sprawdz konfiguracje CPU/GPU.";
     case "transcription_failed":
-      return "Transkrypcja nie powiodĹ‚a siÄ™. SprĂłbuj ponownie albo sprawdĹş lokalny worker STT.";
+      return "Transkrypcja nie powiodla sie. Sprobuj ponownie albo sprawdz lokalny worker STT.";
     default:
-      return "Brak transkrypcji. Lokalny worker STT zgĹ‚osiĹ‚ bĹ‚Ä…d.";
+      return "Brak transkrypcji. Lokalny worker STT zglosil blad.";
   }
 }
 
@@ -153,7 +155,7 @@ async function handleRecordingStop(recordedChunks, audioMimeType) {
 
   if (!recordedChunks.length) {
     setVoiceMode("idle");
-    setStatus("Nie udaĹ‚o siÄ™ zapisaÄ‡ nagrania. SprĂłbuj jeszcze raz.");
+    setStatus("Nie udalo sie zapisac nagrania. Sprobuj jeszcze raz.");
     return;
   }
 
@@ -171,16 +173,18 @@ async function handleRecordingStop(recordedChunks, audioMimeType) {
     if (res.status === "ok" && res.text) {
       els.question.value = res.text;
       els.question.focus();
-      setStatus("Transkrypcja gotowa. MoĹĽesz kliknÄ…Ä‡ Zapytaj agenta.");
+      const strategy = res.diagnostics?.worker?.strategy;
+      const backendLabel = strategy?.device === "cuda" ? "GPU" : "CPU";
+      setStatus(`Transkrypcja gotowa (${backendLabel}). Mozesz kliknac Zapytaj agenta.`);
     } else if (res.status === "empty") {
-      setStatus("Nie wykryto mowy w nagraniu. SprĂłbuj powiedzieÄ‡ zdanie bliĹĽej mikrofonu.");
+      setStatus("Nie wykryto mowy w nagraniu. Sprobuj powiedziec zdanie blizej mikrofonu.");
     } else if (res.status === "error") {
       setStatus(getTranscriptionErrorMessage(res));
     } else {
-      setStatus("Brak transkrypcji. Wpisz pytanie rÄ™cznie albo sprĂłbuj ponownie.");
+      setStatus("Brak transkrypcji. Wpisz pytanie recznie albo sprobuj ponownie.");
     }
   } catch {
-    setStatus("Nie udaĹ‚o siÄ™ przetworzyÄ‡ nagrania.");
+    setStatus("Nie udalo sie przetworzyc nagrania.");
   } finally {
     setVoiceMode("idle");
   }
@@ -192,7 +196,7 @@ async function startRecording() {
   }
 
   if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-    setStatus("To okno nie obsĹ‚uguje nagrywania gĹ‚osu.");
+    setStatus("To okno nie obsluguje nagrywania glosu.");
     return;
   }
 
@@ -213,7 +217,7 @@ async function startRecording() {
       recordingStartedAt = 0;
       cleanupRecordingResources();
       setVoiceMode("idle");
-      setStatus("WystÄ…piĹ‚ bĹ‚Ä…d podczas nagrywania gĹ‚osu.");
+      setStatus("Wystapil blad podczas nagrywania glosu.");
     };
 
     mediaRecorder.onstop = () => {
@@ -225,13 +229,13 @@ async function startRecording() {
 
     mediaRecorder.start(250);
     setVoiceMode("recording");
-    setStatus("Nagrywanie trwa. Kliknij Zatrzymaj nagrywanie, gdy skoĹ„czysz.");
+    setStatus("Nagrywanie trwa. Kliknij Zatrzymaj nagrywanie, gdy skonczysz.");
   } catch {
     chunks = [];
     recordingStartedAt = 0;
     cleanupRecordingResources();
     setVoiceMode("idle");
-    setStatus("Mikrofon jest niedostÄ™pny albo brak zgody na nagrywanie.");
+    setStatus("Mikrofon jest niedostepny albo brak zgody na nagrywanie.");
   }
 }
 
@@ -282,7 +286,7 @@ els.closeBtn.addEventListener("click", () => {
 
 els.pinBtn.addEventListener("click", async () => {
   const pinned = await window.assistantAPI.togglePinWindow();
-  els.pinBtn.textContent = pinned ? "đź“Ś" : "đź“Ť";
+  els.pinBtn.textContent = pinned ? "PIN" : "UNPIN";
 });
 
 els.modeBtn.addEventListener("click", async () => {
@@ -294,5 +298,5 @@ window.addEventListener("beforeunload", cleanupRecordingResources);
 
 setWindowMode(true);
 setVoiceMode("idle");
-setStatus("MoĹĽesz wpisaÄ‡ pytanie albo nagraÄ‡ gĹ‚os.");
+setStatus("Mozesz wpisac pytanie albo nagrac glos.");
 void loadHistory();
