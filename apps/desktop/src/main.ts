@@ -3,7 +3,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { LocalAssistantOrchestrator } from "@local-ai/orchestrator";
-import { LocalSttWorker } from "@local-ai/stt-worker";
+import { LocalSttWorker, type TranscribeAudioInput } from "@local-ai/stt-worker";
 
 const AUTO_CAPTURE_INTERVAL_MS = 3_000;
 const DEFAULT_WINDOWED_WIDTH = 1440;
@@ -248,8 +248,33 @@ function registerIpc() {
     return orchestrator.getSession(sessionId);
   });
 
-  ipcMain.handle("stt:transcribe", async (_, bytes: number[]) => {
-    return sttWorker.transcribeFromBuffer(Buffer.from(bytes));
+  ipcMain.handle("stt:transcribe", async (_, input: Omit<TranscribeAudioInput, "bytes"> & { bytes?: number[] }) => {
+    const payload: TranscribeAudioInput = {
+      bytes: Buffer.from(input?.bytes || []),
+      chunkCount: input?.chunkCount,
+      durationMs: input?.durationMs,
+      mimeType: input?.mimeType,
+    };
+
+    const result = await sttWorker.transcribeFromBuffer(payload);
+
+    if (result.status === "ok") {
+      console.info("Local STT transcription succeeded", {
+        durationMs: payload.durationMs,
+        mimeType: payload.mimeType,
+        status: result.status,
+        textLength: result.text.length,
+      });
+    } else {
+      console.warn("Local STT transcription did not produce text", {
+        diagnostics: result.diagnostics,
+        errorCode: result.errorCode,
+        errorMessage: result.errorMessage,
+        status: result.status,
+      });
+    }
+
+    return result;
   });
 
   ipcMain.handle("window:minimize", () => {

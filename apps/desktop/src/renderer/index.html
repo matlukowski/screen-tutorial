@@ -15,7 +15,7 @@
           </div>
         </div>
         <div class="window-actions">
-          <button id="pinBtn" title="Przypnij/odepnij nad innymi">📌</button>
+          <button id="pinBtn" title="Przypnij lub odepnij nad innymi oknami">📍</button>
           <button id="modeBtn" title="Przełącz między pełnym ekranem a oknem">Okno</button>
           <button id="minBtn" title="Minimalizuj">—</button>
           <button id="closeBtn" title="Ukryj">✕</button>
@@ -27,7 +27,7 @@
           <div class="section-heading">
             <div>
               <h2>Pytanie do agenta</h2>
-              <p class="subtle">Aplikacja zbiera kontekst automatycznie, ale do Codexa trafia on dopiero po kliknięciu przycisku poniżej.</p>
+              <p class="subtle">Aplikacja zbiera kontekst automatycznie, ale do agenta trafia on dopiero po kliknięciu przycisku poniżej.</p>
               <p id="captureMeta" class="subtle"></p>
             </div>
           </div>
@@ -36,7 +36,8 @@
           <textarea id="question" rows="5" placeholder="Np. jak dodać nowy kontakt albo gdzie kliknąć, żeby zmienić status?"></textarea>
 
           <div class="row">
-            <button id="recordBtn" title="Przytrzymaj, aby nagrywać">🎙️ Push-to-talk</button>
+            <button id="startRecordingBtn" title="Rozpocznij nagrywanie głosu">Start nagrywania</button>
+            <button id="stopRecordingBtn" class="button-secondary" title="Zatrzymaj nagrywanie i rozpocznij transkrypcję" disabled>Zatrzymaj nagrywanie</button>
             <button id="askBtn">Zapytaj agenta</button>
           </div>
 

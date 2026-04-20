@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld("assistantAPI", {
   ask: (input: any) => ipcRenderer.invoke("assistant:ask", input),
   listHistory: (appTitle?: string) => ipcRenderer.invoke("history:list", appTitle),
   getSession: (sessionId: string) => ipcRenderer.invoke("history:get", sessionId),
-  transcribeAudio: (bytes: number[]) => ipcRenderer.invoke("stt:transcribe", bytes),
+  transcribeAudio: (input: any) => ipcRenderer.invoke("stt:transcribe", input),
   minimizeWindow: () => ipcRenderer.invoke("window:minimize"),
   closeWindow: () => ipcRenderer.invoke("window:close"),
   togglePinWindow: () => ipcRenderer.invoke("window:toggle-pin"),

@@ -13,7 +13,7 @@
     "postinstall": "npm run rebuild:native",
     "build": "npm run build -w @local-ai/shared && npm run build -w @local-ai/stt-worker && npm run build -w @local-ai/orchestrator && npm run build -w @local-ai/desktop",
     "typecheck": "npm run typecheck -w @local-ai/shared && npm run typecheck -w @local-ai/stt-worker && npm run typecheck -w @local-ai/orchestrator && npm run typecheck -w @local-ai/desktop",
-    "test": "npm run test -w @local-ai/orchestrator",
+    "test": "npm run test -w @local-ai/stt-worker && npm run test -w @local-ai/orchestrator",
     "lint": "npm run typecheck",
     "dev": "npm run build && npm run dev -w @local-ai/desktop",
     "start": "npm run build && npm run start -w @local-ai/desktop"
